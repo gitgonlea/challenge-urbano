@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY . .
 
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
 RUN yarn
 RUN yarn build
 
