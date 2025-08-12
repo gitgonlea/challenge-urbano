@@ -10,10 +10,7 @@ import { ContentQuery } from './content.query';
 export class ContentService {
   constructor(private readonly courseService: CourseService) {}
 
-  async save(
-    courseId: string,
-    createContentDto: CreateContentDto,
-  ): Promise<Content> {
+  async save(courseId: string, createContentDto: CreateContentDto): Promise<Content> {
     const { name, description } = createContentDto;
     const course = await this.courseService.findById(courseId);
     return await Content.create({
@@ -35,54 +32,40 @@ export class ContentService {
         name: 'ASC',
         description: 'ASC',
       },
-    });
+    }) as Content[];
   }
 
   async findById(id: string): Promise<Content> {
-    const content = await Content.findOne(id);
-
+    const content = await Content.findOne(id) as Content;
     if (!content) {
-      throw new HttpException(
-        `Could not find content with matching id ${id}`,
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException(`Could not find content with matching id ${id}`, HttpStatus.NOT_FOUND);
     }
-
     return content;
   }
 
   async findByCourseIdAndId(courseId: string, id: string): Promise<Content> {
-    const content = await Content.findOne({ where: { courseId, id } });
+    const content = await Content.findOne({ where: { courseId, id } }) as Content;
     if (!content) {
-      throw new HttpException(
-        `Could not find content with matching id ${id}`,
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException(`Could not find content with matching id ${id}`, HttpStatus.NOT_FOUND);
     }
     return content;
   }
 
-  async findAllByCourseId(
-    courseId: string,
-    contentQuery: ContentQuery,
-  ): Promise<Content[]> {
+  async findAllByCourseId(courseId: string, contentQuery: ContentQuery): Promise<Content[]> {
     Object.keys(contentQuery).forEach((key) => {
       contentQuery[key] = ILike(`%${contentQuery[key]}%`);
     });
+
     return await Content.find({
       where: { courseId, ...contentQuery },
       order: {
         name: 'ASC',
         description: 'ASC',
       },
-    });
+    }) as Content[];
   }
 
-  async update(
-    courseId: string,
-    id: string,
-    updateContentDto: UpdateContentDto,
-  ): Promise<Content> {
+  async update(courseId: string, id: string, updateContentDto: UpdateContentDto): Promise<Content> {
     const content = await this.findByCourseIdAndId(courseId, id);
     return await Content.create({ id: content.id, ...updateContentDto }).save();
   }

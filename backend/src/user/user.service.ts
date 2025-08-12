@@ -23,22 +23,19 @@ export class UserService {
     return User.create(createUserDto).save();
   }
 
-  async findAll(userQuery: UserQuery): Promise<User[]> {
-    Object.keys(userQuery).forEach((key) => {
-      if (key !== 'role') {
-        userQuery[key] = ILike(`%${userQuery[key]}%`);
-      }
-    });
+async findAll(userQuery: UserQuery): Promise<User[]> {
+  Object.keys(userQuery).forEach((key) => {
+    userQuery[key] = ILike(`%${userQuery[key]}%`);
+  });
 
-    return User.find({
-      where: userQuery,
-      order: {
-        firstName: 'ASC',
-        lastName: 'ASC',
-      },
-    });
-  }
-
+  return await User.find({
+    where: userQuery,
+    order: {
+      firstName: 'ASC',
+      lastName: 'ASC',
+    },
+  }) as User[];
+}
   async findById(id: string): Promise<User> {
     const user = await User.findOne(id);
 
