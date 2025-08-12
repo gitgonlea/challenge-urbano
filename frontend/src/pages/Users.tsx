@@ -1,7 +1,7 @@
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
-import { useQuery } from 'react-query';
 
 import Layout from '../components/layout';
 import Modal from '../components/shared/Modal';
@@ -21,9 +21,9 @@ export default function Users() {
   const [addUserShow, setAddUserShow] = useState<boolean>(false);
   const [error, setError] = useState<string>();
 
-  const { data, isLoading } = useQuery(
-    ['users', firstName, lastName, username, role],
-    async () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['users', firstName, lastName, username, role], // ← changed to object syntax
+    queryFn: async () => {
       return (
         await userService.findAll({
           firstName: firstName || undefined,
@@ -31,12 +31,10 @@ export default function Users() {
           username: username || undefined,
           role: role || undefined,
         })
-      ).filter((user) => user.id !== authenticatedUser.id);
+      ).filter((user) => user.id !== authenticatedUser.id); // ← preserved filtering logic
     },
-    {
-      refetchInterval: 1000,
-    },
-  );
+    refetchInterval: 1000, // ← moved inside the object
+  });
 
   const {
     register,
