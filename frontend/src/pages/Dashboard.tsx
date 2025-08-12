@@ -6,8 +6,8 @@ import statsService from '../services/StatsService';
 
 export default function Dashboard() {
   const { data, isLoading } = useQuery({
-    queryKey: ['stats'], // ← changed to object syntax
-    queryFn: statsService.getStats, // ← wrapped in queryFn
+    queryKey: ['stats'],
+    queryFn: statsService.getStats,
   });
 
   return (
