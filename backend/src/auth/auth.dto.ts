@@ -9,16 +9,7 @@ export class LoginDto {
   password: string;
 }
 
-export class UserResponseDto {
-  id: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  isActive: boolean;
-}
-
 export class LoginResponseDto {
   token: string;
-  user: UserResponseDto;
+  user: any;
 }

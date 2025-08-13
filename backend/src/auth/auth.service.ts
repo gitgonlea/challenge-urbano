@@ -1,16 +1,14 @@
 import {
-  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
 import { UserService } from '../user/user.service';
-import { LoginDto, LoginResponseDto, UserResponseDto } from './auth.dto';
+import { LoginDto, LoginResponseDto } from './auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -21,18 +19,6 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
   ) {}
-
-  // Helper method to create safe user response
-private createUserResponse(user: any): UserResponseDto {
-  return {
-    id: user.id,
-    username: user.username,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    role: user.role,
-    isActive: user.isActive,
-  };
-}
 
   async login(
     loginDto: LoginDto,
@@ -59,35 +45,23 @@ private createUserResponse(user: any): UserResponseDto {
       { subject: id, expiresIn: '15m', secret: this.SECRET },
     );
 
-    /* Generates a refresh token and stores it HASHED in the database */
     const refreshToken = await this.jwtService.signAsync(
       { username, firstName, lastName, role },
       { subject: id, expiresIn: '1y', secret: this.REFRESH_SECRET },
     );
 
-    // Hash the refresh token before storing it
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    await this.userService.setRefreshToken(id, hashedRefreshToken);
+    await this.userService.setRefreshToken(id, refreshToken);
 
-    response.cookie('refresh-token', refreshToken, { 
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
-      sameSite: 'strict' // CSRF protection
-    });
+    response.cookie('refresh-token', refreshToken, { httpOnly: true });
 
-    // Return safe user data without password
-    return { token: accessToken, user: this.createUserResponse(user) };
+    const { password: _, refreshToken: __, ...safeUser } = user;
+    return { token: accessToken, user: safeUser };
   }
 
-  /* Because JWT is a stateless authentication, this function removes the refresh token from the cookies and the database */
   async logout(request: Request, response: Response): Promise<boolean> {
     const userId = request.user['userId'];
     await this.userService.setRefreshToken(userId, null);
-    response.clearCookie('refresh-token', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
-    });
+    response.clearCookie('refresh-token');
     return true;
   }
 
@@ -99,33 +73,30 @@ private createUserResponse(user: any): UserResponseDto {
       throw new HttpException('Refresh token required', HttpStatus.BAD_REQUEST);
     }
 
-    let decoded;
-    try {
-      // Verify the refresh token first
-      decoded = await this.jwtService.verifyAsync(refreshToken, {
-        secret: this.REFRESH_SECRET,
-      });
-    } catch (error) {
-      response.clearCookie('refresh-token');
-      throw new HttpException(
-        'Refresh token is not valid',
-        HttpStatus.FORBIDDEN,
-      );
-    }
-
+    const decoded = this.jwtService.decode(refreshToken);
     const user = await this.userService.findById(decoded['sub']);
-    if (!user || !user.refreshToken) {
-      response.clearCookie('refresh-token');
-      throw new HttpException(
-        'Refresh token is not valid',
-        HttpStatus.FORBIDDEN,
-      );
-    }
-
     const { firstName, lastName, username, id, role } = user;
 
-    // Compare the provided refresh token with the hashed one in database
     if (!(await bcrypt.compare(refreshToken, user.refreshToken))) {
+      response.clearCookie('refresh-token');
+      throw new HttpException(
+        'Refresh token is not valid',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    try {
+      await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.REFRESH_SECRET,
+      });
+      const accessToken = await this.jwtService.signAsync(
+        { username, firstName, lastName, role },
+        { subject: id, expiresIn: '15m', secret: this.SECRET },
+      );
+
+      const { password: _, refreshToken: __, ...safeUser } = user;
+      return { token: accessToken, user: safeUser };
+    } catch (error) {
       response.clearCookie('refresh-token');
       await this.userService.setRefreshToken(id, null);
       throw new HttpException(
@@ -133,13 +104,5 @@ private createUserResponse(user: any): UserResponseDto {
         HttpStatus.FORBIDDEN,
       );
     }
-
-    const accessToken = await this.jwtService.signAsync(
-      { username, firstName, lastName, role },
-      { subject: id, expiresIn: '15m', secret: this.SECRET },
-    );
-
-    // Return safe user data without password
-    return { token: accessToken, user: this.createUserResponse(user) };
   }
 }
