@@ -17,7 +17,7 @@ interface ContentsTableProps {
 }
 
 export default function ContentsTable({
-  data,
+  data = [],
   isLoading,
   courseId,
 }: ContentsTableProps) {
