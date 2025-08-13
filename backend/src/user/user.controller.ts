@@ -12,6 +12,7 @@ import {
   Query,
   UseGuards,
   UseInterceptors,
+  Req
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
@@ -42,7 +43,17 @@ export class UserController {
 
   @Get()
   @Roles(Role.Admin)
-  async findAll(@Query() userQuery: UserQuery): Promise<User[]> {
+  async findAll(@Req() req: any): Promise<User[]> {
+    const userQuery: UserQuery = {};
+    
+    if (req.query.role && req.query.role !== 'all') {
+      userQuery.role = req.query.role;
+    }
+    
+    if (req.query.firstName) userQuery.firstName = req.query.firstName;
+    if (req.query.lastName) userQuery.lastName = req.query.lastName;
+    if (req.query.username) userQuery.username = req.query.username;
+    
     return await this.userService.findAll(userQuery);
   }
 
