@@ -14,7 +14,7 @@ interface UsersTableProps {
   isLoading: boolean;
 }
 
-export default function UsersTable({ data, isLoading }: UsersTableProps) {
+export default function UsersTable({ data = [], isLoading }: UsersTableProps) {
   const [deleteShow, setDeleteShow] = useState<boolean>(false);
   const [updateShow, setUpdateShow] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
