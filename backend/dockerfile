@@ -1,32 +1,45 @@
-FROM node:alpine as build
+# --- Build Stage ---
+# Use the current LTS version of Node.js (v20) to ensure compatibility with modern packages.
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
-COPY package.json .
-COPY yarn.lock .
+# Copy package files first to leverage Docker's layer cache.
+COPY package.json yarn.lock ./
 
-RUN yarn
+# Install ALL dependencies using the lockfile for a reproducible build.
+# This step is only re-run if package.json or yarn.lock change.
+RUN yarn install --frozen-lockfile
 
+# Copy the rest of the source code.
 COPY . .
 
+# Build the TypeScript project into JavaScript.
 RUN yarn build
 
-#---
-
-FROM node:alpine
+# --- Production Stage ---
+# Start fresh with the same Node.js version for a lean final image.
+FROM node:20-alpine
 
 WORKDIR /app
 
+# Set the environment to production.
 ENV NODE_ENV=production
 
-COPY package.json .
-COPY yarn.lock .
-COPY ormconfig.js .
+# Copy package files again for the production-only install.
+COPY package.json yarn.lock ./
 
-RUN yarn install --production
+# Install ONLY production dependencies. This makes the final image much smaller.
+RUN yarn install --production --frozen-lockfile
 
+# Copy the compiled code from the 'build' stage into the final image.
 COPY --from=build /app/dist ./dist
 
+# Copy any other necessary runtime config files.
+COPY ormconfig.js .
+
+# Expose the port the application will run on.
 EXPOSE 5000
 
-ENTRYPOINT [ "yarn", "start:prod" ]
+# The command to start the application.
+CMD [ "yarn", "start:prod" ]

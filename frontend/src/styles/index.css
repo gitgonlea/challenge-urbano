@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+.test {
+  color: pink;
+  background-color: green;
+}
+
 @layer base {
   html,
   body,

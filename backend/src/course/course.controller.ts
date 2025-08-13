@@ -8,6 +8,7 @@ import {
   Put,
   Query,
   UseGuards,
+  Req
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
@@ -40,10 +41,16 @@ export class CourseController {
     return await this.courseService.save(createCourseDto);
   }
 
-  @Get()
-  async findAll(@Query() courseQuery: CourseQuery): Promise<Course[]> {
-    return await this.courseService.findAll(courseQuery);
-  }
+@Get()
+async findAll(@Req() req: any): Promise<Course[]> {
+
+  const courseQuery: CourseQuery = {
+    name: req.query.name || undefined,
+    description: req.query.description || undefined,
+  };
+  
+  return await this.courseService.findAll(courseQuery);
+}
 
   @Get('/:id')
   async findOne(@Param('id') id: string): Promise<Course> {

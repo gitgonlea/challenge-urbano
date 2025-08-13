@@ -24,21 +24,27 @@ export class UserService {
   }
 
   async findAll(userQuery: UserQuery): Promise<User[]> {
+    const whereClause: any = {};
+    
+    if (userQuery.role && userQuery.role !== 'all') {
+      whereClause.role = userQuery.role;
+    }
+    
     Object.keys(userQuery).forEach((key) => {
-      if (key !== 'role') {
-        userQuery[key] = ILike(`%${userQuery[key]}%`);
+      if (key !== 'role' && userQuery[key] && userQuery[key].trim()) {
+        whereClause[key] = ILike(`%${userQuery[key]}%`);
       }
     });
 
-    return User.find({
-      where: userQuery,
+    return await User.find({
+      where: Object.keys(whereClause).length > 0 ? whereClause : {},
       order: {
         firstName: 'ASC',
         lastName: 'ASC',
       },
-    });
+    }) as User[];
   }
-
+  
   async findById(id: string): Promise<User> {
     const user = await User.findOne(id);
 

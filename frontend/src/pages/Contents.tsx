@@ -1,7 +1,7 @@
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
-import { useQuery } from 'react-query';
 import { useParams } from 'react-router';
 
 import ContentsTable from '../components/content/ContentsTable';
@@ -21,7 +21,10 @@ export default function Course() {
   const [addContentShow, setAddContentShow] = useState<boolean>(false);
   const [error, setError] = useState<string>();
 
-  const userQuery = useQuery('user', async () => courseService.findOne(id));
+  const userQuery = useQuery({
+    queryKey: ['user', id],
+    queryFn: async () => courseService.findOne(id),
+  });
 
   const {
     register,
@@ -30,17 +33,15 @@ export default function Course() {
     reset,
   } = useForm<CreateContentRequest>();
 
-  const { data, isLoading } = useQuery(
-    [`contents-${id}`, name, description],
-    async () =>
+  const { data, isLoading } = useQuery({
+    queryKey: [`contents-${id}`, name, description],
+    queryFn: async () =>
       contentService.findAll(id, {
         name: name || undefined,
         description: description || undefined,
       }),
-    {
-      refetchInterval: 1000,
-    },
-  );
+    refetchInterval: 1000,
+  });
 
   const saveCourse = async (createContentRequest: CreateContentRequest) => {
     try {
