@@ -14,24 +14,29 @@ export class CourseService {
     }).save();
   }
 
-  async findAll(courseQuery: CourseQuery): Promise<Course[]> {
-    Object.keys(courseQuery).forEach((key) => {
-      courseQuery[key] = ILike(`%${courseQuery[key]}%`);
-    });
-
-    return await Course.find({
-      where: courseQuery,
-      order: {
-        name: 'ASC',
-        description: 'ASC',
-      },
-    }) as Course[];
+async findAll(courseQuery: CourseQuery): Promise<Course[]> {
+  const whereClause: any = {};
+  
+  if (courseQuery.name && courseQuery.name.trim()) {
+    whereClause.name = ILike(`%${courseQuery.name}%`);
   }
-
+  
+  if (courseQuery.description && courseQuery.description.trim()) {
+    whereClause.description = ILike(`%${courseQuery.description}%`);
+  }
+  
+  return await Course.find({
+    where: Object.keys(whereClause).length > 0 ? whereClause : {},
+    order: {
+      name: 'ASC',
+      description: 'ASC',
+    },
+  });
+}
   async findById(id: string): Promise<Course> {
     const course = await Course.findOne(id) as Course;
     if (!course) {
-      throw new HttpException(`Could not find course with matching id ${id}`, HttpStatus.NOT_FOUND);
+      throw new HttpException(`Could not find csourse with matching id ${id}`, HttpStatus.NOT_FOUND);
     }
     return course;
   }
