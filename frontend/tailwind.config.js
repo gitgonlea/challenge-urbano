@@ -13,9 +13,6 @@ module.exports = {
         'primary-white': '#ffffff',
         'white-hover': '#f2f2f2',
       },
-      backgroundImage: {
-        'sidebar-image': "url('/assets/sidemenu-bg.jpg')",
-      },
     },
   },
   variants: {
