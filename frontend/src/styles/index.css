@@ -1,17 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-.test {
-  color: pink;
-  background-color: green;
-}
 
 @layer base {
   html,
   body,
   #root {
     @apply h-full;
+  }
+  body {
+    font-family: 'Nunito Sans', sans-serif;
   }
   h1 {
     @apply text-2xl;
@@ -29,8 +29,8 @@
 
 @layer components {
   .btn {
-    @apply p-3 bg-blue-500 rounded-md focus:outline-none text-white;
-    @apply hover:bg-blue-700 transition-all;
+    @apply p-3 bg-brand-primary/90 rounded-md text-white;
+    @apply hover:bg-brand-primary transition-all duration-150 ease-in;
     @apply focus:ring disabled:opacity-50;
   }
   .btn.danger {
