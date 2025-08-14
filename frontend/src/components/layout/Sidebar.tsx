@@ -21,7 +21,10 @@ export default function Sidebar({ className }: SidebarProps) {
   };
 
   return (
-    <div className={`sidebar bg-sidebar-image bg-cover bg-center ${className}`}>
+    <div
+      className={`sidebar bg-cover bg-center ${className}`}
+      style={{ backgroundImage: 'url(/assets/sidemenu-bg.jpg)' }}
+    >
       <div className="absolute inset-0 bg-brand-background/10" />
       <div className="relative z-10 flex flex-col h-full">
         <Link to="/" className="no-underline">
