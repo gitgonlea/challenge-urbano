@@ -12,7 +12,6 @@ interface SidebarProps {
 
 export default function Sidebar({ className }: SidebarProps) {
   const history = useHistory();
-
   const { authenticatedUser, setAuthenticatedUser } = useAuth();
 
   const handleLogout = async () => {
@@ -22,29 +21,39 @@ export default function Sidebar({ className }: SidebarProps) {
   };
 
   return (
-    <div className={'sidebar ' + className}>
-      <Link to="/" className="no-underline text-black">
-        <h1 className="font-semibold text-center">Carna Project</h1>
-      </Link>
-      <nav className="mt-5 flex flex-col gap-3 flex-grow">
-        <SidebarItem to="/">
-          <Home /> Dashboard
-        </SidebarItem>
-        <SidebarItem to="/courses">
-          <BookOpen /> Courses
-        </SidebarItem>
-        {authenticatedUser.role === 'admin' ? (
-          <SidebarItem to="/users">
-            <Users /> Users
+    <div className={`sidebar bg-sidebar-image bg-cover bg-center ${className}`}>
+      <div className="absolute inset-0 bg-brand-background/10" />
+      <div className="relative z-10 flex flex-col h-full">
+        <Link to="/" className="no-underline">
+          <img
+            src="/assets/urbano-logo-white.png"
+            alt="123"
+            className="h-25 mx-auto py-4 object-contain"
+          />
+        </Link>
+        <nav className="mt-5 flex flex-col gap-3 flex-grow px-2">
+          <SidebarItem to="/">
+            <Home /> Dashboard
           </SidebarItem>
-        ) : null}
-      </nav>
-      <button
-        className="text-red-500 rounded-md p-3 transition-colors flex gap-3 justify-center items-center font-semibold focus:outline-none"
-        onClick={handleLogout}
-      >
-        <LogOut /> Logout
-      </button>
+          <SidebarItem to="/courses">
+            <BookOpen /> Courses
+          </SidebarItem>
+          {authenticatedUser.role === 'admin' ? (
+            <SidebarItem to="/users">
+              <Users /> Users
+            </SidebarItem>
+          ) : null}
+        </nav>
+
+        <div className="px-2 pb-4">
+          <button
+            className="btn w-full flex gap-3 justify-center items-center"
+            onClick={handleLogout}
+          >
+            <LogOut /> Logout
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
