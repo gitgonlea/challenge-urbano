@@ -11,5 +11,5 @@ export class LoginDto {
 
 export class LoginResponseDto {
   token: string;
-  user: User;
+  user: any;
 }

@@ -1,9 +1,7 @@
 import {
-  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -47,7 +45,6 @@ export class AuthService {
       { subject: id, expiresIn: '15m', secret: this.SECRET },
     );
 
-    /* Generates a refresh token and stores it in a httponly cookie */
     const refreshToken = await this.jwtService.signAsync(
       { username, firstName, lastName, role },
       { subject: id, expiresIn: '1y', secret: this.REFRESH_SECRET },
@@ -57,10 +54,10 @@ export class AuthService {
 
     response.cookie('refresh-token', refreshToken, { httpOnly: true });
 
-    return { token: accessToken, user };
+    const { password: _, refreshToken: __, ...safeUser } = user;
+    return { token: accessToken, user: safeUser };
   }
 
-  /* Because JWT is a stateless authentication, this function removes the refresh token from the cookies and the database */
   async logout(request: Request, response: Response): Promise<boolean> {
     const userId = request.user['userId'];
     await this.userService.setRefreshToken(userId, null);
@@ -97,7 +94,8 @@ export class AuthService {
         { subject: id, expiresIn: '15m', secret: this.SECRET },
       );
 
-      return { token: accessToken, user };
+      const { password: _, refreshToken: __, ...safeUser } = user;
+      return { token: accessToken, user: safeUser };
     } catch (error) {
       response.clearCookie('refresh-token');
       await this.userService.setRefreshToken(id, null);
